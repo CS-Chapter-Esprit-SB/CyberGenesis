@@ -1,0 +1,39 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-added-large-files
+
+  # Ruff runs globally across the monorepo using root pyproject.toml
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.6.9
+    hooks:
+      - id: ruff
+        args: [--fix]
+      - id: ruff-format
+
+  # Centralized Basedpyright Hook
+  - repo: local
+    hooks:
+      - id: basedpyright-monorepo
+        name: Run Basedpyright (Monorepo)
+        entry: uv run basedpyright
+        language: system
+        pass_filenames: false
+        stages: [pre-commit]
+
+  # Centralized Pytest Hook
+  - repo: local
+    hooks:
+      - id: pytest-monorepo
+        name: Run Pytest (Monorepo)
+        entry: bash -c '
+          for dir in $(find . -mindepth 3 -maxdepth 4 -type f -name "pyproject.toml" ! -path "./pyproject.toml" -exec dirname {} \;); do
+            (cd "$dir" && uv run pytest) || exit 1;
+          done'
+        language: system
+        pass_filenames: false
+        stages: [pre-commit]

@@ -84,3 +84,19 @@ jobs:
           else
             echo "No Dockerfile found in ${{ matrix.project-path }}, skipping..."
           fi
+  # Single status check to require in GitHub Branch Protection
+  ci-success:
+    name: "CI Status Check (All Passed)"
+    needs: [lint-and-test, docker-build]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Check overall pipeline result
+        run: |
+          if [[ "${{ needs.lint-and-test.result }}" == "success" && "${{ needs.docker-build.result }}" == "success" ]]; then
+            echo "All microservice checks passed!"
+            exit 0
+          else
+            echo "One or more microservice checks failed."
+            exit 1
+          fi
