@@ -45,9 +45,9 @@ Welcome to the project repository! This repository uses a monorepo structure con
 │           ├── Dockerfile
 │           └── pyproject.toml
 │
-├── docs/  
+├── docs/
 │   └── servicename_projectname.md
-├── monitoring/  
+├── monitoring/
 │   └──.pre-commit-config.yaml     # Global pre-commit configuration
 ├── pyproject.toml              # ROOT TOOLING ONLY (Ruff, Basedpyright, Pytest)
 └── README.md
