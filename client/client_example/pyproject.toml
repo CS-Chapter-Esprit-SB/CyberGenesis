@@ -1,0 +1,20 @@
+[project]
+name = "client-example"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "aymen", email = "aymenfkir23@gmail.com" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "pre-commit>=4.6.1",
+    "pytest>=9.1.1",
+]
+
+[project.scripts]
+client-example = "client_example:main"
+
+[build-system]
+requires = ["uv_build>=0.11.21,<0.12.0"]
+build-backend = "uv_build"

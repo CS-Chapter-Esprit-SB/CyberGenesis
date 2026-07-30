@@ -35,3 +35,12 @@ exclude = ["**/__pycache__", "**/.venv", "**/.uv"]
 minversion = "8.0"
 python_files = ["test_*.py", "*_test.py"]
 pythonpath = ["."]
+
+[tool.uv.workspace]
+members = [
+    "client/*",
+    "server/*",
+    "data_management/*",
+    "monitoring/*",
+    "client/client_example",
+]

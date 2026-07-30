@@ -1,0 +1,28 @@
+{
+  // ==============================================================================
+  // Language Server Settings (Basedpyright)
+  // ==============================================================================
+  "python.languageServer": "None",
+  "basedpyright.analysis.typeCheckingMode": "standard",
+  "basedpyright.analysis.autoSearchPaths": true,
+  "basedpyright.importStrategy": "useBundled",
+  "basedpyright.analysis.configFilePath": "${workspaceFolder}/pyproject.toml",
+
+  // ==============================================================================
+  // Format on Save & Native Ruff Integration
+  // ==============================================================================
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.organizeImports.ruff": "explicit",
+    "source.fixAll.ruff": "explicit"
+  },
+
+  "[python]": {
+    "editor.defaultFormatter": "charliermarsh.ruff",
+    "editor.formatOnSave": true
+  },
+
+  // Updated Ruff Settings (Deprecated ruff.lint.run removed)
+  "ruff.configuration": "${workspaceFolder}/pyproject.toml",
+  "ruff.importStrategy": "fromEnvironment"
+}
