@@ -1,0 +1,86 @@
+name: Microservices CI Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  # Stage 1: Dynamically locate all project directories matching the structure
+  discover-projects:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Find all microservice project paths
+        id: set-matrix
+        run: |
+          # Finds all subdirectories containing a pyproject.toml file
+          DIRS=$(find . -mindepth 3 -maxdepth 4 -type f -name "pyproject.toml" -exec dirname {} \; | jq -R . | jq -s -c .)
+          echo "matrix=$DIRS" >> $GITHUB_OUTPUT
+
+  # Stage 2: Lint and Test every discovered service concurrently
+  lint-and-test:
+    needs: discover-projects
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        project-path: ${{ fromJson(needs.discover-projects.outputs.matrix) }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+          cache-dependency-glob: "${{ matrix.project-path }}/uv.lock"
+
+      - name: Set up Python
+        run: uv python install 3.12
+
+      - name: Install Dependencies
+        run: |
+          cd ${{ matrix.project-path }}
+          uv sync --all-extras --dev
+
+      - name: Run Ruff (Linter & Formatter Check)
+        run: |
+          cd ${{ matrix.project-path }}
+          uv run ruff check .
+          uv run ruff format --check .
+
+      - name: Run Pytest
+        run: |
+          cd ${{ matrix.project-path }}
+          uv run pytest test/
+
+  # Stage 3: Docker Build Check
+  docker-build:
+    needs: discover-projects
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        project-path: ${{ fromJson(needs.discover-projects.outputs.matrix) }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker Image (Validation Only)
+        run: |
+          if [ -f "${{ matrix.project-path }}/Dockerfile" ]; then
+            docker build ${{ matrix.project-path }} --file ${{ matrix.project-path }}/Dockerfile
+          else
+            echo "No Dockerfile found in ${{ matrix.project-path }}, skipping..."
+          fi
