@@ -1,18 +1,20 @@
 FROM python:3.12-slim
 
-# Install uv inside container
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
 WORKDIR /app
 
-# Copy dependency definition
+# Copy metadata first
 COPY pyproject.toml README.md ./
 
-# Generate lockfile on-the-fly and install dependencies
-RUN uv sync --no-cache
+# Install external dependencies only (cached if pyproject.toml hasn't changed)
+RUN uv sync --no-install-project --no-cache
 
-# Copy remaining source code
+# Copy source code
 COPY src/ ./src/
+
+# Install the local package itself
+RUN uv sync --no-cache
 
 EXPOSE 8000
 
