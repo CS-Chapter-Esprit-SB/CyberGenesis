@@ -20,49 +20,60 @@ jobs:
         id: set-matrix
         run: |
           # Finds all subdirectories containing a pyproject.toml file
-          DIRS=$(find . -mindepth 3 -maxdepth 4 -type f -name "pyproject.toml" -exec dirname {} \; | jq -R . | jq -s -c .)
-          echo "matrix=$DIRS" >> $GITHUB_OUTPUT
+          DIRS=$(find . -mindepth 3 -maxdepth 4 -type f -name "pyproject.toml" ! -path "./pyproject.toml" -exec dirname {} \; | jq -R . | jq -s -c .)
+
+          # Edge case: Handle empty matrix safely
+          if [ "$DIRS" == "[]" ] || [ -z "$DIRS" ]; then
+            echo "No microservices found!"
+            echo "matrix=[]" >> $GITHUB_OUTPUT
+          else
+            echo "matrix=$DIRS" >> $GITHUB_OUTPUT
+          fi
 
   # Stage 2: Lint and Test every discovered service concurrently
   lint-and-test:
     needs: discover-projects
     runs-on: ubuntu-latest
+    if: ${{ needs.discover-projects.outputs.matrix != '[]' }}
     strategy:
       fail-fast: false
       matrix:
         project-path: ${{ fromJson(needs.discover-projects.outputs.matrix) }}
 
+    defaults:
+      run:
+        working-directory: ${{ matrix.project-path }}
+
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4 # <-- REQUIRED: Downloads your code into the job runner
+
       - name: Install uv
-        uses: astral-sh/setup-uv@v5 # Updated from v3 to v5+
+        uses: astral-sh/setup-uv@v5
         with:
           version: "latest"
           enable-cache: true
-          cache-dependency-glob: "**/uv.lock" # Fixes lockfile caching across monorepo layers
+          cache-dependency-glob: "**/uv.lock"
 
       - name: Set up Python
         run: uv python install 3.12
 
       - name: Install Dependencies
-        run: |
-          cd ${{ matrix.project-path }}
-          uv sync --all-extras --dev
+        run: uv sync --all-extras --dev
 
       - name: Run Ruff (Linter & Formatter Check)
         run: |
-          cd ${{ matrix.project-path }}
           uv run ruff check .
           uv run ruff format --check .
 
       - name: Run Pytest
-        run: |
-          cd ${{ matrix.project-path }}
-          uv run pytest test/
+        run: uv run pytest test/
 
   # Stage 3: Docker Build Check
   docker-build:
     needs: discover-projects
     runs-on: ubuntu-latest
+    if: ${{ needs.discover-projects.outputs.matrix != '[]' }}
     strategy:
       fail-fast: false
       matrix:
@@ -82,17 +93,27 @@ jobs:
           else
             echo "No Dockerfile found in ${{ matrix.project-path }}, skipping..."
           fi
-  # Single status check to require in GitHub Branch Protection
+
+  # Stage 4: Single status check for GitHub Branch Protection
   ci-success:
     name: "CI Status Check (All Passed)"
-    needs: [lint-and-test, docker-build]
+    needs: [discover-projects, lint-and-test, docker-build]
     runs-on: ubuntu-latest
     if: always()
     steps:
       - name: Check overall pipeline result
         run: |
-          if [[ "${{ needs.lint-and-test.result }}" == "success" && "${{ needs.docker-build.result }}" == "success" ]]; then
-            echo "All microservice checks passed!"
+          LINT_RESULT="${{ needs.lint-and-test.result }}"
+          DOCKER_RESULT="${{ needs.docker-build.result }}"
+
+          # If no matrix jobs ran because no microservices exist, mark as success
+          if [[ "$LINT_RESULT" == "skipped" && "$DOCKER_RESULT" == "skipped" ]]; then
+            echo "No microservices detected. Skipping checks."
+            exit 0
+          fi
+
+          if [[ ("$LINT_RESULT" == "success" || "$LINT_RESULT" == "skipped") && ("$DOCKER_RESULT" == "success" || "$DOCKER_RESULT" == "skipped") ]]; then
+            echo "All microservice checks passed successfully!"
             exit 0
           else
             echo "One or more microservice checks failed."
