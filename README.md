@@ -14,6 +14,8 @@ Getting started
 ### Folder structure
 Make sure to respect the folder structure you can find it in [here](docs/folder_structure.md)
 
+Enviorment Setup
+see [ENVIRONMENT_SETUP.md](docs/ENVIRONMENT_SETUP.md) for setting up your enviorment
 
 Contributing
 See [CONTRIBUTING.md](CONTRIBUTING.md) for contribution guidelines and development setup.
