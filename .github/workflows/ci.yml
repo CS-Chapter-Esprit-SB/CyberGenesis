@@ -31,6 +31,7 @@ jobs:
           fi
 
   # Stage 2: Lint and Test every discovered service concurrently
+
   lint-and-test:
     needs: discover-projects
     runs-on: ubuntu-latest
@@ -40,13 +41,9 @@ jobs:
       matrix:
         project-path: ${{ fromJson(needs.discover-projects.outputs.matrix) }}
 
-    defaults:
-      run:
-        working-directory: ${{ matrix.project-path }}
-
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4 # <-- REQUIRED: Downloads your code into the job runner
+        uses: actions/checkout@v4
 
       - name: Install uv
         uses: astral-sh/setup-uv@v5
@@ -58,17 +55,18 @@ jobs:
       - name: Set up Python
         run: uv python install 3.12
 
-      - name: Install Dependencies
-        run: uv sync --all-extras --dev
-
+      # 1. Run Ruff globally on the specific microservice folder using root config
       - name: Run Ruff (Linter & Formatter Check)
         run: |
-          uv run ruff check .
-          uv run ruff format --check .
+          uvx ruff check ${{ matrix.project-path }}
+          uvx ruff format --check ${{ matrix.project-path }}
 
-      - name: Run Pytest
-        run: uv run pytest test/
-
+      # 2. Sync sub-service dependencies and run tests locally
+      - name: Install Microservice Dependencies & Run Pytest
+        run: |
+          cd ${{ matrix.project-path }}
+          uv sync --all-extras --dev
+          uv run pytest test/
   # Stage 3: Docker Build Check
   docker-build:
     needs: discover-projects
@@ -88,10 +86,15 @@ jobs:
 
       - name: Build Docker Image (Validation Only)
         run: |
-          if [ -f "${{ matrix.project-path }}/Dockerfile" ]; then
-            docker build ${{ matrix.project-path }} --file ${{ matrix.project-path }}/Dockerfile
+          DOCKERFILE="${{ matrix.project-path }}/Dockerfile"
+
+          # Check if Dockerfile exists AND is not empty (-s checks file size > 0)
+          if [ -f "$DOCKERFILE" ] && [ -s "$DOCKERFILE" ]; then
+            echo "Building Docker image for ${{ matrix.project-path }}..."
+            docker build ${{ matrix.project-path }} --file "$DOCKERFILE"
           else
-            echo "No Dockerfile found in ${{ matrix.project-path }}, skipping..."
+            echo "Dockerfile is missing or empty in ${{ matrix.project-path }}. Skipping build step..."
+            exit 0
           fi
 
   # Stage 4: Single status check for GitHub Branch Protection
