@@ -51,3 +51,15 @@ Welcome to the project repository! This repository uses a monorepo structure con
 │   └──.pre-commit-config.yaml     # Global pre-commit configuration
 ├── pyproject.toml              # ROOT TOOLING ONLY (Ruff, Basedpyright, Pytest)
 └── README.md
+```
+
+---
+
+## 📂 Repository Directory Structure
+
+To create a folder that respect the schema you should do that by executing the following
+
+```bash
+cd working_folder/
+uv init --package --python 3.12 working_folder_by_<name>
+```

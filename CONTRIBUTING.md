@@ -7,9 +7,9 @@ Local setup
 
 ```bash
 git clone <repo-url>
-cd cs_and_atia
-cd <your_working_folder>
-uv init <project-name>
+cd CyberGenesis/
+cd working_folder/
+uv init --package --python 3.12 working_folder_by_<name>
 uv add pre-commit --dev
 ```
 
