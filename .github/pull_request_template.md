@@ -1,8 +1,12 @@
+## issue ID
+pattern : (resolve/fix/close)#number
+-
 ## 📝 Description
 
 Briefly describe the changes introduced by this pull request. Mention why these changes are necessary and what problem they solve.
 
 ---
+
 
 ## 🔍 Type of Change
 
