@@ -23,7 +23,9 @@ repos:
         name: Run Basedpyright (Monorepo)
         entry: uv run basedpyright
         language: system
+        types: [python]
         pass_filenames: false
+        files: \.py$
         stages: [pre-commit]
 
   # Centralized Pytest Hook
