@@ -50,3 +50,4 @@ This document outlines the required tools, extensions, and step-by-step instruct
     # installing Basedright lsp
 
     uv tool install basedpyright
+- check
