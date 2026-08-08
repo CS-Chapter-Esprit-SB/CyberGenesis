@@ -1,0 +1,23 @@
+FROM python:3.12-slim
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    UV_LINK_MODE=copy
+
+WORKDIR /app
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends curl ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN curl -LsSf https://astral.sh/uv/install.sh | sh \
+    && ln -s /root/.local/bin/uv /usr/local/bin/uv
+
+# Copy dependency metadata first so layer caching works well for future services.
+COPY pyproject.toml uv.lock ./
+
+# This template does not install project code yet; it only prepares the runtime.
+RUN uv sync --frozen --no-install-project --no-install-workspace
+
+CMD ["python", "-c", "print('Dockerfile.base template ready')"]
