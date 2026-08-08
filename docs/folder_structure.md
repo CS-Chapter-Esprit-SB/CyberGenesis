@@ -22,7 +22,11 @@ Welcome to the project repository! This repository uses a monorepo structure con
 │           └── pyproject.toml # Service-specific dependencies (FastAPI, etc.)
 │
 ├── server/                     # Layer 2: Core server / business logic services
-│       └── server_by_<name>/
+│   ├── Dockerfile.base         # Shared Python 3.12 + uv builder image
+│   ├── Dockerfile.template     # Multi-stage service Dockerfile template
+│   ├── docker-compose.yml      # Infra only (Postgres + Redis)
+│   ├── .env.example            # Compose env defaults
+│   └── server_by_<name>/
 │           ├── src/
 │           │   └── server_by_<name>/
 │           ├── test/
@@ -46,12 +50,15 @@ Welcome to the project repository! This repository uses a monorepo structure con
 │           └── pyproject.toml
 │
 ├── docs/
+│   ├── DOCKER.md               # Base image, compose, future multi-stage services
 │   └── servicename_projectname.md
 ├── monitoring/
 │   └──.pre-commit-config.yaml     # Global pre-commit configuration
 ├── pyproject.toml              # ROOT TOOLING ONLY (Ruff, Basedpyright, Pytest)
 └── README.md
 ```
+
+Docker layout and commands: [DOCKER.md](DOCKER.md).
 
 ---
 
