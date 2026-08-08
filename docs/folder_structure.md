@@ -46,12 +46,17 @@ Welcome to the project repository! This repository uses a monorepo structure con
 │           └── pyproject.toml
 │
 ├── docs/
+│   ├── DOCKER.md               # Base image + multi-stage service Dockerfiles
 │   └── servicename_projectname.md
+├── Dockerfile.base             # Shared Python 3.12 + uv builder image
+├── docker-compose.yml          # Infra only (Postgres + Redis)
 ├── monitoring/
 │   └──.pre-commit-config.yaml     # Global pre-commit configuration
 ├── pyproject.toml              # ROOT TOOLING ONLY (Ruff, Basedpyright, Pytest)
 └── README.md
 ```
+
+Docker image layout and build commands: [DOCKER.md](DOCKER.md).
 
 ---
 

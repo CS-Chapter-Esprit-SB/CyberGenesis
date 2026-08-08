@@ -84,14 +84,18 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
+      - name: Build shared Python + uv base image
+        run: |
+          docker build -f Dockerfile.base -t cygen/python-base:uv .
+
       - name: Build Docker Image (Validation Only)
         run: |
           DOCKERFILE="${{ matrix.project-path }}/Dockerfile"
 
           # Check if Dockerfile exists AND is not empty (-s checks file size > 0)
           if [ -f "$DOCKERFILE" ] && [ -s "$DOCKERFILE" ]; then
-            echo "Building Docker image for ${{ matrix.project-path }}..."
-            docker build ${{ matrix.project-path }} --file "$DOCKERFILE"
+            echo "Building Docker image for ${{ matrix.project-path }} from repo root..."
+            docker build -f "$DOCKERFILE" .
           else
             echo "Dockerfile is missing or empty in ${{ matrix.project-path }}. Skipping build step..."
             exit 0

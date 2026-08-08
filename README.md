@@ -17,6 +17,9 @@ Make sure to respect the folder structure you can find it in [here](docs/folder_
 Enviorment Setup
 see [ENVIRONMENT_SETUP.md](docs/ENVIRONMENT_SETUP.md) for setting up your enviorment
 
+Docker
+see [DOCKER.md](docs/DOCKER.md) for the base image, multi-stage service builds, and compose (Postgres/Redis)
+
 Contributing
 See [CONTRIBUTING.md](CONTRIBUTING.md) for contribution guidelines and development setup.
 

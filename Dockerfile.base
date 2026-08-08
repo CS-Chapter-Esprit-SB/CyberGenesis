@@ -1,9 +1,14 @@
+# Shared builder base: Python 3.12 + uv only (no app code, no deps).
+# Build/tag before any service image:
+#   docker build -f Dockerfile.base -t cygen/python-base:uv .
+
 FROM python:3.12-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1 \
-    UV_LINK_MODE=copy
+    UV_LINK_MODE=copy \
+    PATH="/root/.local/bin:${PATH}"
 
 WORKDIR /app
 
@@ -12,12 +17,4 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 RUN curl -LsSf https://astral.sh/uv/install.sh | sh \
-    && ln -s /root/.local/bin/uv /usr/local/bin/uv
-
-# Copy dependency metadata first so layer caching works well for future services.
-COPY pyproject.toml uv.lock ./
-
-# This template does not install project code yet; it only prepares the runtime.
-RUN uv sync --frozen --no-install-project --no-install-workspace
-
-CMD ["python", "-c", "print('Dockerfile.base template ready')"]
+    && ln -sf /root/.local/bin/uv /usr/local/bin/uv
