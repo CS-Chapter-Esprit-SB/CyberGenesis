@@ -18,7 +18,7 @@ Enviorment Setup
 see [ENVIRONMENT_SETUP.md](docs/ENVIRONMENT_SETUP.md) for setting up your enviorment
 
 Docker
-see [DOCKER.md](docs/DOCKER.md) for the base image, multi-stage service builds, and compose (Postgres/Redis)
+see [DOCKER.md](docs/DOCKER.md) for the shared base image and server Compose (Postgres/Redis)
 
 Contributing
 See [CONTRIBUTING.md](CONTRIBUTING.md) for contribution guidelines and development setup.

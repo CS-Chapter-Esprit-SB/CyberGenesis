@@ -1,6 +1,6 @@
 # Shared builder base: Python 3.12 + uv only (no app code, no deps).
-# Build/tag before any service image:
-#   docker build -f Dockerfile.base -t cygen/python-base:uv .
+# Build/tag before any service image (from repo root):
+#   docker build -f server/Dockerfile.base -t cygen/python-base:uv server/
 
 FROM python:3.12-slim
 

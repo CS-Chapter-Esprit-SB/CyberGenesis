@@ -1,35 +1,31 @@
 # Docker images
 
-This repo uses a shared base image plus a multi-stage Dockerfile per microservice. That keeps builds consistent and final images small.
+Shared Docker infrastructure lives under [`server/`](../server/). Per-service application images are added later next to each microservice (`server/<service>/Dockerfile`, etc.). CI is unchanged and builds a service Dockerfile only when one exists in that service folder and is non-empty.
 
 ## Roles
 
 | File | Role |
 |------|------|
-| [`Dockerfile.base`](../Dockerfile.base) | Shared **builder** image: Python 3.12 + `uv` only. No app code, no project dependencies. |
-| `<service>/Dockerfile` | Multi-stage **service** image: install deps + app in a builder stage, copy only the runtime venv into a slim final image. |
-| [`docker-compose.yml`](../docker-compose.yml) | **Infra only** (Postgres + Redis). It does not build or run app images. |
+| [`server/Dockerfile.base`](../server/Dockerfile.base) | Shared **builder** image: Python 3.12 + `uv` only. No app code, no project dependencies. |
+| [`server/Dockerfile.template`](../server/Dockerfile.template) | **Multi-stage** example to copy into `server/<service>/Dockerfile` when a service is ready. Not built by CI (filename is not `Dockerfile`). |
+| `server/<service>/Dockerfile` | Real service image (start empty so CI skips; paste from the template when ready). |
+| [`server/docker-compose.yml`](../server/docker-compose.yml) | **Infra only** (Postgres + Redis). It does not build or run app images. |
+| [`server/.env.example`](../server/.env.example) | Example env vars for Compose. |
 
-`Dockerfile.base` is not the runnable service. Tag it as `cygen/python-base:uv` and use it as `FROM` in each service’s builder stage.
+`Dockerfile.base` is not a runnable service. Tag it as `cygen/python-base:uv` and use it as `FROM` in each service’s builder stage.
 
-## Why multi-stage?
+## Why base + multi-stage?
 
-- **Builder stage** (from `cygen/python-base:uv`): has `uv`, resolves the lockfile, installs the package into `.venv`.
-- **Runtime stage** (from `python:3.12-slim`): copies only `.venv` (and whatever else is required to run). No `uv`, no build tools, smaller attack surface and image size.
+- **Base** (`cygen/python-base:uv`): standardizes Python + `uv` for server-side builds.
+- **Builder stage**: resolve the lockfile, install the package into `.venv`.
+- **Runtime stage** (`python:3.12-slim`): copy only `.venv` — smaller image, no `uv` / build tools.
 
-## Test locally (`client_example`)
+## Build the shared base
 
-Always run from the **monorepo root**. Use `sudo` if your user cannot access the Docker socket.
+From the **monorepo root** (use `sudo` if your user cannot access the Docker socket):
 
 ```bash
-# 1. Shared base (once, or when Dockerfile.base changes)
-docker build -f Dockerfile.base -t cygen/python-base:uv .
-
-# 2. Service image (requires the base image from step 1)
-docker build -f client/client_example/Dockerfile -t cygen/client-example:local .
-
-# 3. Run — expect: Hello from client-example!
-docker run --rm cygen/client-example:local
+docker build -f server/Dockerfile.base -t cygen/python-base:uv server/
 ```
 
 Optional check:
@@ -38,29 +34,30 @@ Optional check:
 docker images | grep cygen
 ```
 
-You should see both `cygen/python-base` and `cygen/client-example`.
+You should see `cygen/python-base`.
 
-CI (`docker-build` in `.github/workflows/ci.yml`) follows the same order: build/tag `cygen/python-base:uv`, then `docker build -f <service>/Dockerfile .` from the repo root.
+## Multi-stage service template
 
-## Pattern for a new service
+1. Copy [`server/Dockerfile.template`](../server/Dockerfile.template) to `server/<service>/Dockerfile`.
+2. Adjust `COPY` paths / `uv sync` / `CMD` for that package.
+3. Build with the same context CI uses once the file is non-empty:
 
-1. Keep using `Dockerfile.base` / `cygen/python-base:uv` as the builder parent.
-2. Copy that service’s `pyproject.toml` + `src` under the same paths the workspace lock expects (for example `client/<name>/...`).
-3. Sync only that workspace member (create a stub `README.md` in the image if `pyproject.toml` declares one and `*.md` is dockerignored):
+```bash
+docker build server/<service> --file server/<service>/Dockerfile
+```
 
-   ```dockerfile
-   RUN touch <layer>/<service>/README.md \
-       && uv sync --frozen --package <package-name> --no-dev --no-editable
-   ```
-
-4. In the runtime stage, copy `/app/.venv` and set `PATH=/app/.venv/bin:$PATH`. Prefer the package console script (or `python -m ...`) as `CMD` — do not require `uv` in the final image.
-5. Build from the repo root with `-f <layer>/<service>/Dockerfile`.
+Until then, leave `Dockerfile` **empty** so CI skips (`-s` requires size > 0).
 
 ## Compose (infra)
 
 ```bash
+cd server
 cp .env.example .env   # if needed
 docker compose up -d   # Postgres + Redis only
 ```
 
-App containers are built with the Dockerfiles above, not via Compose (unless you add app services later).
+Or from the repo root:
+
+```bash
+docker compose -f server/docker-compose.yml --env-file server/.env.example up -d
+```
