@@ -1,0 +1,20 @@
+[project]
+name = "client-medcherif"
+version = "0.1.0"
+description = "Client setup test package for Mohamed Cherif"
+readme = "README.md"
+authors = [
+    { name = "Mohamed Cherif", email = "mohamed.cherif.eng@gmail.com" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "pre-commit>=4.6.1",
+    "pytest>=9.1.1",
+]
+
+[project.scripts]
+client-medcherif = "client_medcherif:main"
+
+[build-system]
+requires = ["uv_build>=0.11.21,<0.12.0"]
+build-backend = "uv_build"
