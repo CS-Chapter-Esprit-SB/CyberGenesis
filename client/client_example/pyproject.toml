@@ -18,3 +18,28 @@ client-example = "client_example:main"
 [build-system]
 requires = ["uv_build>=0.11.21,<0.12.0"]
 build-backend = "uv_build"
+
+[tool.uv.workspace]
+members = ["packages/*", "apps/*"]
+
+# Development dependencies for workspace members/root
+[dependency-groups]
+dev = [
+    "ruff>=0.3.0",
+    "basedpyright>=1.1.0",
+]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 88
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+ignore = []
+
+[tool.ruff.format]
+quote-style = "double"
+
+[tool.basedpyright]
+pythonVersion = "3.12"
+typeCheckingMode = "standard"
