@@ -1,9 +1,9 @@
 ## issue ID
-pattern : (resolve/fix/close)#number
--
+resolve #3
+
 ## 📝 Description
 
-Briefly describe the changes introduced by this pull request. Mention why these changes are necessary and what problem they solve.
+Add a new microservice `client_by_ahmed` under the `client/` directory following the project microservice template. The service includes utility functions (`add`, `is_even`, `reverse_string`) with full test coverage.
 
 ---
 
@@ -13,7 +13,7 @@ Briefly describe the changes introduced by this pull request. Mention why these 
 Select the type of change that best fits your PR:
 
 - [ ] 🐛 **Bug Fix** (non-breaking change fixing an issue)
-- [ ] ✨ **New Feature** (non-breaking change adding functionality)
+- [x] ✨ **New Feature** (non-breaking change adding functionality)
 - [ ] 🚨 **Breaking Change** (fix/feature that breaks existing behavior)
 - [ ] 🧹 **Refactoring / Maintenance** (code cleanup, performance, or internal changes)
 - [ ] 📚 **Documentation** (updates to docs, READMEs, or guides)
@@ -25,7 +25,7 @@ Select the type of change that best fits your PR:
 
 Specify which parts of the workspace are modified:
 
-- [ ] `client/*`
+- [x] `client/*`
 - [ ] `server/*`
 - [ ] `data_management/*`
 - [ ] `monitoring/*`
@@ -37,14 +37,14 @@ Specify which parts of the workspace are modified:
 
 Describe the testing process used to verify these changes:
 
-- [ ] Local unit tests (`uv run pytest`)
-- [ ] Type checks (`uv run basedpyright`)
-- [ ] Linting & formatting checks (`uvx ruff check .`)
+- [x] Local unit tests (`uv run pytest`)
+- [x] Type checks (`uv run basedpyright`)
+- [x] Linting & formatting checks (`uvx ruff check .`)
 - [ ] Docker build validation (`docker build .`)
 
 > **Steps to reproduce tests locally:**
 > ```bash
-> cd path/to/service
+> cd client/client_by_ahmed
 > uv sync --all-extras --dev
 > uv run pytest
 > ```
@@ -55,9 +55,9 @@ Describe the testing process used to verify these changes:
 
 Before submitting your PR, complete the following checks:
 
-- [ ] My code follows the project's style guidelines (`ruff` and `basedpyright` pass locally).
-- [ ] I have run `pre-commit` hooks prior to committing.
-- [ ] I have added/updated tests where applicable.
-- [ ] All new and existing tests pass locally.
+- [x] My code follows the project's style guidelines (`ruff` and `basedpyright` pass locally).
+- [x] I have run `pre-commit` hooks prior to committing.
+- [x] I have added/updated tests where applicable.
+- [x] All new and existing tests pass locally.
 - [ ] I have updated relevant documentation or inline comments.
 - [ ] If modified, the `Dockerfile` builds without errors.
