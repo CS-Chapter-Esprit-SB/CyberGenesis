@@ -1,20 +1,3 @@
-[project]
-name = "cybergenesis"
-version = "0.1.0"
-description = "CyberGenesis monorepo for client, server, data management, and monitoring services."
-readme = "README.md"
-requires-python = ">=3.12"
-
-dependencies = []
-
-[dependency-groups]
-dev = [
-    "basedpyright>=1.31.0",
-    "pre-commit>=4.6.1",
-    "pytest>=8.0.0",
-    "ruff>=0.16.1",
-]
-
 [tool.uv]
 # Prevents 'uv sync' or 'uv run' from treating the root as an installable package
 package = false

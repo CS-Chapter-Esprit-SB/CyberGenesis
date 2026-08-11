@@ -21,7 +21,7 @@ repos:
     hooks:
       - id: basedpyright-monorepo
         name: Run Basedpyright (Monorepo)
-        entry: uv run --group dev basedpyright
+        entry: uv run basedpyright
         language: system
         types: [python]
         pass_filenames: false
@@ -35,7 +35,7 @@ repos:
         name: Run Pytest (Monorepo)
         entry: bash -c '
           for dir in $(find . -mindepth 3 -maxdepth 4 -type f -name "pyproject.toml" ! -path "./pyproject.toml" -exec dirname {} \;); do
-          (cd "$dir" && uv run --group dev pytest) || exit 1;
+          (cd "$dir" && uv run pytest) || exit 1;
           done'
         language: system
         pass_filenames: false
