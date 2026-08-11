@@ -1,1 +1,0 @@
-# Reserved for the service-specific Docker image implementation.
