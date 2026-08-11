@@ -1,0 +1,31 @@
+# Multi-stage service image template (copy into server/<service>/Dockerfile when ready).
+#
+# 1. Build the shared base (from repo root):
+#      docker build -f server/Dockerfile.base -t cygen/python-base:uv server/
+# 2. Copy this file to server/<service>/Dockerfile and adjust COPY / CMD for that package.
+# 3. CI builds with service-dir context when Dockerfile is non-empty:
+#      docker build <service-path> --file <service-path>/Dockerfile
+#
+# Keep service Dockerfiles empty until the image is ready so CI skips them.
+
+FROM cygen/python-base:uv AS builder
+
+WORKDIR /app
+
+COPY pyproject.toml uv.lock ./
+COPY src ./src
+
+RUN uv sync --frozen --no-dev --no-editable
+
+FROM python:3.12-slim AS runtime
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PATH="/app/.venv/bin:${PATH}"
+
+WORKDIR /app
+
+COPY --from=builder /app/.venv /app/.venv
+
+# Replace with the service console script or module entrypoint.
+CMD ["python", "-c", "print('replace with service entrypoint')"]
