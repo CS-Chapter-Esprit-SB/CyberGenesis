@@ -1,40 +1,33 @@
-# Docker images
+﻿# Docker images
 
-Shared Docker infrastructure lives under [`server/`](../server/). Per-service application images are added later next to each microservice (`server/<service>/Dockerfile`, etc.). CI is unchanged and builds a service Dockerfile only when one exists in that service folder and is non-empty.
+Shared Docker infrastructure lives under [`server/`](../server/). Per-service application images live next to each microservice (`server/<service>/Dockerfile`). CI builds a service Dockerfile only when one exists in that service folder and is non-empty.
 
 ## Roles
 
 | File | Role |
 |------|------|
-| [`server/Dockerfile.base`](../server/Dockerfile.base) | Shared **builder** image: Python 3.12 + `uv` only. No app code, no project dependencies. |
+| [`server/Dockerfile.base`](../server/Dockerfile.base) | Optional **builder** image: Python 3.12 + `uv` only (no app code). Service Dockerfiles install `uv` inline; this file is for local caching only. |
 | [`server/Dockerfile.template`](../server/Dockerfile.template) | **Multi-stage** example to copy into `server/<service>/Dockerfile` when a service is ready. Not built by CI (filename is not `Dockerfile`). |
-| `server/<service>/Dockerfile` | Real service image (start empty so CI skips; paste from the template when ready). |
+| `server/<service>/Dockerfile` | Self-contained multi-stage image: `python:3.12-slim` builder with `uv`, then slim runtime with `.venv` only. |
 | [`server/docker-compose.yml`](../server/docker-compose.yml) | Postgres, Redis, and application services (auth, rate-limiter, url-shortener). |
 | [`server/.env.example`](../server/.env.example) | Example env vars for Compose. |
 
-`Dockerfile.base` is not a runnable service. Tag it as `cygen/python-base:uv` and use it as `FROM` in each service’s builder stage.
+`Dockerfile.base` is not a runnable service and is **not** required for CI or Compose service builds.
 
-## Why base + multi-stage?
+## Why multi-stage?
 
-- **Base** (`cygen/python-base:uv`): standardizes Python + `uv` for server-side builds.
-- **Builder stage**: resolve the lockfile, install the package into `.venv`.
+- **Builder stage** (`python:3.12-slim` + `uv`): resolve dependencies and install the package into `.venv`.
 - **Runtime stage** (`python:3.12-slim`): copy only `.venv` — smaller image, no `uv` / build tools.
 
-## Build the shared base
+## Optional: shared builder cache
 
-From the **monorepo root** (use `sudo` if your user cannot access the Docker socket):
+To avoid reinstalling `uv` on every local rebuild, you can tag the shared base:
 
 ```bash
 docker build -f server/Dockerfile.base -t cygen/python-base:uv server/
 ```
 
-Optional check:
-
-```bash
-docker images | grep cygen
-```
-
-You should see `cygen/python-base`.
+Service Dockerfiles do not `FROM` this image; they embed the same steps so CI and fresh clones work without a private registry.
 
 ## Multi-stage service template
 
@@ -50,13 +43,7 @@ Until then, leave `Dockerfile` **empty** so CI skips (`-s` requires size > 0).
 
 ## Compose (infra + services)
 
-Build the shared base image first (required for service Dockerfiles):
-
-```bash
-docker build -f server/Dockerfile.base -t cygen/python-base:uv server/
-```
-
-Then start the full stack:
+From `server/` (or repo root with `-f`):
 
 ```bash
 cd server

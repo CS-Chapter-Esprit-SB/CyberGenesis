@@ -1,11 +1,21 @@
-# Build shared base first (from repo root):
-#   docker build -f server/Dockerfile.base -t cygen/python-base:uv server/
 # CI / local build (service dir context):
 #   docker build server/server_by_auth --file server/server_by_auth/Dockerfile
 
-FROM cygen/python-base:uv AS builder
+FROM python:3.12-slim AS builder
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    UV_LINK_MODE=copy \
+    PATH="/root/.local/bin:${PATH}"
 
 WORKDIR /app
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends curl ca-certificates \
+    && rm -rf /var/lib/apt/lists/* \
+    && curl -LsSf https://astral.sh/uv/0.11.21/install.sh | sh \
+    && ln -sf /root/.local/bin/uv /usr/local/bin/uv
 
 COPY pyproject.toml ./
 COPY src ./src
