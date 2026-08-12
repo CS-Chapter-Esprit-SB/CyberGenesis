@@ -139,6 +139,48 @@ async def test_gateway_identifier_prefers_token(fake_redis: FakeAsyncRedis) -> N
     assert token_allowed.status_code == 200
 
 
+class _StubJWTAuthMiddleware:
+    """Minimal ASGI JWT gate for gateway stack-order tests."""
+
+    def __init__(
+        self,
+        app,
+        *,
+        token: str,
+        user_id: str,
+        username: str,
+    ) -> None:
+        self.app = app
+        self._token = token
+        self._user_id = user_id
+        self._username = username
+
+    async def __call__(self, scope, receive, send) -> None:
+        from starlette.requests import Request
+
+        if scope["type"] != "http":
+            await self.app(scope, receive, send)
+            return
+        request = Request(scope, receive)
+        header = request.headers.get("authorization", "")
+        if not header.lower().startswith("bearer "):
+            response = JSONResponse(
+                {"detail": "authentication required"}, status_code=401
+            )
+            await response(scope, receive, send)
+            return
+        if header[7:].strip() != self._token:
+            response = JSONResponse(
+                {"detail": "authentication required"}, status_code=401
+            )
+            await response(scope, receive, send)
+            return
+        headers = list(scope.get("headers", []))
+        headers.append((b"x-user-id", self._user_id.encode()))
+        headers.append((b"x-username", self._username.encode()))
+        await self.app({**scope, "headers": headers}, receive, send)
+
+
 @pytest.mark.asyncio
 async def test_gateway_stack_rate_limit_before_auth(
     fake_redis: FakeAsyncRedis,
@@ -146,8 +188,6 @@ async def test_gateway_stack_rate_limit_before_auth(
     """Rate limiting runs before JWT auth at the gateway edge."""
     import json
 
-    from server_by_auth import security
-    from server_by_auth.middleware import JWTAuthMiddleware
     from starlette.types import Receive, Scope, Send
 
     async def identity_echo_app(scope: Scope, receive: Receive, send: Send) -> None:
@@ -170,17 +210,22 @@ async def test_gateway_stack_rate_limit_before_auth(
     limiter = RedisSlidingWindowLimiter(
         fake_redis, scope="gateway", limit=1, window_ms=60_000
     )
-    downstream = JWTAuthMiddleware(identity_echo_app)
+    gateway_token = "gateway-test-token"
+    downstream = _StubJWTAuthMiddleware(
+        identity_echo_app,
+        token=gateway_token,
+        user_id="3",
+        username="gateway-user",
+    )
     gateway = RateLimitMiddleware(downstream, limiter, gateway_identifier)
     transport = ASGITransport(app=gateway)
-    token = security.create_access_token(3, "gateway-user")
 
     async with AsyncClient(transport=transport, base_url="http://test") as client:
         first = await client.get(
-            "/protected", headers={"Authorization": f"Bearer {token}"}
+            "/protected", headers={"Authorization": f"Bearer {gateway_token}"}
         )
         second = await client.get(
-            "/protected", headers={"Authorization": f"Bearer {token}"}
+            "/protected", headers={"Authorization": f"Bearer {gateway_token}"}
         )
 
     assert first.status_code == 200

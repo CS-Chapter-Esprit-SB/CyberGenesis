@@ -17,14 +17,10 @@ dev = [
     "pre-commit>=4.6.1",
     "pytest>=8.0.0",
     "pytest-asyncio>=0.24.0",
-    "server-by-auth",
 ]
 
 [project.scripts]
 server-by-rate-limiter = "server_by_rate_limiter.main:run"
-
-[tool.uv.sources]
-server-by-auth = { workspace = true }
 
 [build-system]
 requires = ["uv_build>=0.11.21,<0.12.0"]
