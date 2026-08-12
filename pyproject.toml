@@ -35,6 +35,7 @@ exclude = ["**/__pycache__", "**/.venv", "**/.uv"]
 minversion = "8.0"
 python_files = ["test_*.py", "*_test.py"]
 pythonpath = ["."]
+asyncio_mode = "auto"
 
 [tool.uv.workspace]
 members = [
