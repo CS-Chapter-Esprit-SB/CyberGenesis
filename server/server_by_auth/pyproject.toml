@@ -1,0 +1,30 @@
+[project]
+name = "server-by-auth"
+version = "0.1.0"
+description = "Authentication microservice issuing and validating JWT access tokens"
+requires-python = ">=3.12"
+dependencies = [
+    "asyncpg>=0.30.0",
+    "bcrypt>=4.0.0",
+    "fastapi>=0.115.0",
+    "pyjwt>=2.8.0",
+    "pydantic-settings>=2.4.0",
+    "sqlmodel>=0.0.22",
+    "uvicorn[standard]>=0.30.0",
+]
+
+[dependency-groups]
+dev = [
+    "aiosqlite>=0.20.0",
+    "httpx>=0.27.0",
+    "pre-commit>=4.6.1",
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.24.0",
+]
+
+[project.scripts]
+server-by-auth = "server_by_auth.main:run"
+
+[build-system]
+requires = ["uv_build>=0.11.21,<0.12.0"]
+build-backend = "uv_build"

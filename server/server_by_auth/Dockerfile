@@ -1,7 +1,7 @@
 # Build shared base first (from repo root):
 #   docker build -f server/Dockerfile.base -t cygen/python-base:uv server/
 # CI / local build (service dir context):
-#   docker build server/server_by_url_shortener --file server/server_by_url_shortener/Dockerfile
+#   docker build server/server_by_auth --file server/server_by_auth/Dockerfile
 
 FROM cygen/python-base:uv AS builder
 
@@ -22,6 +22,6 @@ WORKDIR /app
 
 COPY --from=builder /app/.venv /app/.venv
 
-EXPOSE 8000
+EXPOSE 8001
 
-CMD ["server-by-url-shortener"]
+CMD ["server-by-auth"]

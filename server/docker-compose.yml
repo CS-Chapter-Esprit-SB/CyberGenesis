@@ -38,6 +38,80 @@ services:
     networks:
       - cybergen-net
 
+  auth:
+    build:
+      context: ./server_by_auth
+      dockerfile: Dockerfile
+    image: cybergen/auth:${IMAGE_TAG:-local}
+    container_name: cybergen-auth
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-cybergen}:${POSTGRES_PASSWORD:-cybergen}@postgres:5432/${POSTGRES_DB:-cybergen}
+      JWT_SECRET: ${JWT_SECRET:-dev-secret-change-me-0123456789abcdef}
+      JWT_ISSUER: ${JWT_ISSUER:-cybergen-auth}
+      ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES:-30}
+    ports:
+      - "${AUTH_PORT:-8001}:8001"
+    healthcheck:
+      test: [ "CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8001/health')\"" ]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    networks:
+      - cybergen-net
+
+  rate-limiter:
+    build:
+      context: ./server_by_rate_limiter
+      dockerfile: Dockerfile
+    image: cybergen/rate-limiter:${IMAGE_TAG:-local}
+    container_name: cybergen-rate-limiter
+    restart: unless-stopped
+    depends_on:
+      redis:
+        condition: service_healthy
+    environment:
+      REDIS_URL: redis://redis:6379/0
+      DEFAULT_LIMIT: ${DEFAULT_LIMIT:-100}
+      DEFAULT_WINDOW_MS: ${DEFAULT_WINDOW_MS:-60000}
+    ports:
+      - "${RATE_LIMITER_PORT:-8002}:8002"
+    healthcheck:
+      test: [ "CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8002/health')\"" ]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - cybergen-net
+
+  url-shortener:
+    build:
+      context: ./server_by_url_shortener
+      dockerfile: Dockerfile
+    image: cybergen/url-shortener:${IMAGE_TAG:-local}
+    container_name: cybergen-url-shortener
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-cybergen}:${POSTGRES_PASSWORD:-cybergen}@postgres:5432/${POSTGRES_DB:-cybergen}
+    ports:
+      - "${URL_SHORTENER_PORT:-8000}:8000"
+    healthcheck:
+      test: [ "CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')\"" ]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    networks:
+      - cybergen-net
+
 networks:
   cybergen-net:
     name: cybergen-net

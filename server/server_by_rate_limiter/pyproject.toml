@@ -1,0 +1,31 @@
+[project]
+name = "server-by-rate-limiter"
+version = "0.1.0"
+description = "Redis-backed sliding-window rate limiter service protecting the gateway"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.115.0",
+    "pydantic-settings>=2.4.0",
+    "redis>=5.0.0",
+    "uvicorn[standard]>=0.30.0",
+]
+
+[dependency-groups]
+dev = [
+    "fakeredis>=2.24.0",
+    "httpx>=0.27.0",
+    "pre-commit>=4.6.1",
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.24.0",
+    "server-by-auth",
+]
+
+[project.scripts]
+server-by-rate-limiter = "server_by_rate_limiter.main:run"
+
+[tool.uv.sources]
+server-by-auth = { workspace = true }
+
+[build-system]
+requires = ["uv_build>=0.11.21,<0.12.0"]
+build-backend = "uv_build"
