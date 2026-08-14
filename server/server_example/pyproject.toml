@@ -1,0 +1,25 @@
+[project]
+name = "server-example"
+version = "0.1.0"
+description = "Rate limiting microservice for gateway traffic"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.111.0",
+    "redis>=5.0.0",
+    "uvicorn>=0.30.0",
+    "fakeredis>=2.24.1",
+]
+
+[project.optional-dependencies]
+test = [
+    "pytest>=8.0.0",
+    "httpx>=0.24.0",
+    "starlette>=0.37.0",
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+
+[build-system]
+requires = ["hatchling>=1.18.0"]
+build-backend = "hatchling.build"

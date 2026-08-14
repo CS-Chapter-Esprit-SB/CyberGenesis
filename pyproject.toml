@@ -36,6 +36,15 @@ minversion = "8.0"
 python_files = ["test_*.py", "*_test.py"]
 pythonpath = ["."]
 
+[dependency-groups]
+dev = [
+    "basedpyright>=1.39.10",
+    "fakeredis[lua]>=2.37.0",
+    "httpx2>=2.10.0",
+    "lupa>=2.8",
+    "ruff>=0.16.3",
+]
+
 [tool.uv.workspace]
 members = [
     "client/*",
