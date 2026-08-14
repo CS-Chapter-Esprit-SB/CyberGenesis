@@ -1,7 +1,6 @@
 import logging
 
 import fakeredis
-import redis
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from server_example.gateway import RateLimitMiddleware
@@ -10,12 +9,7 @@ from server_example.structured_logger import StructuredLogger
 
 
 def test_sliding_window_rate_limiter_blocks_when_limit_exceeded() -> None:
-    redis_client = redis.Redis(
-        host="localhost",
-        port=6379,
-        decode_responses=True,
-    )
-    redis_client.delete("demo:client-123")
+    redis_client = fakeredis.FakeRedis(decode_responses=True)
     limiter = SlidingWindowRateLimiter(
         redis_client=redis_client,
         limit=2,
