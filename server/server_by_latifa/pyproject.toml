@@ -1,0 +1,32 @@
+[project]
+name = "server-by-latifa"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "benyahiia", email = "benyahia.latifa@esprit.tn" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.141.1",
+    "httpx>=0.28.1",
+    "python-dotenv>=1.2.2",
+    "tenacity>=9.1.4",
+    "uvicorn>=0.52.3",
+]
+
+[project.scripts]
+server-by-latifa = "server_by_latifa:main"
+
+[build-system]
+requires = ["uv_build>=0.12.3,<0.13.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "httpx>=0.28.1",
+    "pytest>=9.1.1",
+    "pytest-asyncio>=1.4.0",
+]
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
