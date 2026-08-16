@@ -55,6 +55,7 @@ Services:
 
 | Service | Port | Depends on |
 |---------|------|------------|
+| `api-gateway` | 8080 (host) → 8000 (container) | Auth, Rate Limiter, URL Shortener |
 | `url-shortener` | 8000 | Postgres |
 | `auth` | 8001 | Postgres |
 | `rate-limiter` | 8002 | Redis |
@@ -69,7 +70,7 @@ docker compose -f server/docker-compose.yml --env-file server/.env.example up -d
 
 ## Gateway middleware stack
 
-There is no separate gateway container yet. Both packages export ASGI middleware meant to be mounted at the API edge in front of any downstream app:
+The `api-gateway` service routes requests by prefix to the downstream services and applies bounded retries. The middleware below is the next step to mount at the gateway edge. Both packages export ASGI middleware meant to be mounted in front of any downstream app:
 
 ```text
 Request → RateLimitMiddleware → JWTAuthMiddleware → downstream ASGI app
@@ -87,7 +88,7 @@ Request → RateLimitMiddleware → JWTAuthMiddleware → downstream ASGI app
 - Public paths: `/health`, `/docs`, `/api/v1/auth/register`, `/api/v1/auth/login`, `/api/v1/auth/verify`
 - Injects `X-User-Id` and `X-Username` into the **request scope** for downstream services
 
-Example wiring in a future gateway app:
+Example wiring in the gateway app:
 
 ```python
 from server_by_auth.middleware import JWTAuthMiddleware

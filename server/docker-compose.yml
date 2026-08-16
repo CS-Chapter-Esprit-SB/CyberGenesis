@@ -112,6 +112,35 @@ services:
     networks:
       - cybergen-net
 
+  api-gateway:
+    build:
+      context: ./server_by_api_gateway
+      dockerfile: Dockerfile
+    image: cybergen/api-gateway:${IMAGE_TAG:-local}
+    container_name: cybergen-api-gateway
+    restart: unless-stopped
+    depends_on:
+      auth:
+        condition: service_healthy
+      rate-limiter:
+        condition: service_healthy
+      url-shortener:
+        condition: service_healthy
+    environment:
+      AUTH_SERVICE_URL: http://auth:8001
+      RATE_LIMITER_SERVICE_URL: http://rate-limiter:8002
+      URL_SHORTENER_SERVICE_URL: http://url-shortener:8000
+    ports:
+      - "${GATEWAY_PORT:-8080}:8000"
+    healthcheck:
+      test: [ "CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')\"" ]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    networks:
+      - cybergen-net
+
 networks:
   cybergen-net:
     name: cybergen-net
