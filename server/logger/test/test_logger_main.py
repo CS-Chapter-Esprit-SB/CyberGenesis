@@ -67,32 +67,30 @@ class TestSingleton:
         _ = _capture_stream(monkeypatch)
         assert get_logger() is StructuredLogger.get()
 
-    def test_direct_construction_does_not_duplicate_handlers(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
-        # A second StructuredLogger() built against the same named stdlib
-        # logger must not add a second copy of OUR handler. We don't assert
-        # on the logger's total handler count, since other code (e.g. a
-        # test runner) may legitimately attach its own unrelated handlers
-        # to this logger — that's exactly the scenario this guards against.
+    def test_no_duplicate_handler(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        # Goal: building StructuredLogger twice must not attach our handler
+        # twice (which would print every log line twice). We only count
+        # handlers with OUR name — not the logger's total handler count —
+        # since other code (e.g. a test runner) may legitimately attach
+        # its own unrelated handlers to this same logger.
         _ = _capture_stream(monkeypatch)
-        _ = StructuredLogger()
-        _ = StructuredLogger()
+        _ = StructuredLogger()  # first build: attaches our handler
+        _ = StructuredLogger()  # second build: should reuse it, not duplicate
         stdlib_logger = logging.getLogger("cybergenesis")
         ours = [h for h in stdlib_logger.handlers if h.name == HANDLER_NAME]
         assert len(ours) == 1
 
-    def test_installs_handler_even_when_a_foreign_handler_is_already_present(
+    def test_handler_survives_foreign_handler(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        # Regression test: something else (a test runner, another library)
-        # attaching a handler to this logger first must not stop our own
-        # handler from being installed.
+        # Goal: if something else (a test runner, another library) already
+        # attached its own handler to the "cybergenesis" logger before we
+        # do, our handler must still get installed and still receive logs.
         stdlib_logger = logging.getLogger("cybergenesis")
-        stdlib_logger.addHandler(logging.NullHandler())
+        stdlib_logger.addHandler(logging.NullHandler())  # simulate foreign handler
         buffer = _capture_stream(monkeypatch)
         StructuredLogger.get().warning("hello")
-        assert buffer.getvalue() != ""
+        assert buffer.getvalue() != ""  # our handler still wrote the log
 
     def test_logger_does_not_propagate(self, monkeypatch: pytest.MonkeyPatch) -> None:
         _ = _capture_stream(monkeypatch)
