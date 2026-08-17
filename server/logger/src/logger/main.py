@@ -10,7 +10,7 @@ import logging
 import os
 import sys
 import uuid
-from typing import cast, override
+from typing import Self, cast, override
 
 ENV_VAR_NAME = "CYBERGENESIS_LOG"
 SERVICE_ID_ENV_VAR = "CYBERGENESIS_SERVICE_ID"
@@ -76,10 +76,10 @@ class StructuredLogger:
         self._logger: logging.Logger = logger
 
     @classmethod
-    def get(cls) -> "StructuredLogger":
+    def get(cls) -> Self:
         if cls._instance is None:
             cls._instance = cls()
-        return cls._instance
+        return cast(Self, cls._instance)
 
     @classmethod
     def reset_for_tests_only(cls) -> None:
